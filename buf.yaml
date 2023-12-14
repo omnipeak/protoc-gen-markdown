@@ -1,0 +1,49 @@
+version: v1
+
+breaking:
+  use:
+    - FILE
+
+deps:
+  - buf.build/googleapis/googleapis
+  - buf.build/bufbuild/protovalidate
+
+lint:
+  use:
+    - DIRECTORY_SAME_PACKAGE
+    - PACKAGE_DEFINED
+    # Disabled because we want to keep the proto for the driver inside the pkg directory
+    # - PACKAGE_DIRECTORY_MATCH
+    - PACKAGE_SAME_DIRECTORY
+    - ENUM_PASCAL_CASE
+    - ENUM_VALUE_UPPER_SNAKE_CASE
+    - FIELD_LOWER_SNAKE_CASE
+    - MESSAGE_PASCAL_CASE
+    - ONEOF_LOWER_SNAKE_CASE
+    - PACKAGE_LOWER_SNAKE_CASE
+    - RPC_PASCAL_CASE
+    - SERVICE_PASCAL_CASE
+    - PACKAGE_SAME_CSHARP_NAMESPACE
+    - PACKAGE_SAME_GO_PACKAGE
+    - PACKAGE_SAME_JAVA_MULTIPLE_FILES
+    - PACKAGE_SAME_JAVA_PACKAGE
+    - PACKAGE_SAME_PHP_NAMESPACE
+    - PACKAGE_SAME_RUBY_PACKAGE
+    - PACKAGE_SAME_SWIFT_PREFIX
+    - ENUM_FIRST_VALUE_ZERO
+    - ENUM_NO_ALLOW_ALIAS
+    - IMPORT_NO_WEAK
+    - IMPORT_NO_PUBLIC
+    - IMPORT_USED
+    - ENUM_VALUE_PREFIX
+    - ENUM_ZERO_VALUE_SUFFIX
+    - FILE_LOWER_SNAKE_CASE
+    - RPC_REQUEST_RESPONSE_UNIQUE
+    - RPC_REQUEST_STANDARD_NAME
+    - RPC_RESPONSE_STANDARD_NAME
+    # Disabled because we're not a public API and having a v1 folder in every package instead of as a prefix is _DUMB_. Give me a v1.blah.rule instead of a blah.rule.v1 and then we can talk. :|
+    # - PACKAGE_VERSION_SUFFIX
+    - PROTOVALIDATE
+    - SERVICE_SUFFIX
+    - COMMENTS
+    - PACKAGE_NO_IMPORT_CYCLE
