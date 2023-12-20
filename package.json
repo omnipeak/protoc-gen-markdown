@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "scripts": {
+    "protos:build": "npx buf build",
+    "protos:lint": "buf lint",
+    "protos": "buf generate"
+  },
+	"dependencies": {
+		"@bufbuild/buf": "^1.28.1"
+	}
+}

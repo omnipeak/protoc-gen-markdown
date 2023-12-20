@@ -4,13 +4,153 @@ package example.protos;
 
 import "buf/validate/validate.proto";
 
+// Pet is an example enum describing a type of pet
+enum Pet {
+  // The default value for a Pet field, usually treated as an invalid value
+  PET_UNSPECIFIED = 0;
+
+  // ≽^•⩊•^≼
+  PET_CAT = 1;
+
+  // ૮・ﻌ・ა
+  PET_DOG = 2;
+
+  // 𓆟
+  PET_FISH = 3;
+}
+
+// Person is an example message describing a person
 message Person {
+  // The unique identifier of a Person
   string id = 1 [(buf.validate.field) = {
     required: true,
     string: {
       uuid: true,
     },
   }];
-  string name = 2;
-  string email = 3;
+
+  // The actual data for the Person
+  PersonData data = 2 [(buf.validate.field) = {
+    required: true,
+  }];
+}
+
+// Person Data is an example message containing the actual data for a person
+message PersonData {
+  // The Person's name
+  string name = 1 [(buf.validate.field) = {
+    required: true,
+    string: {
+      min_len: 1,
+      max_len: 100,
+    },
+  }];
+
+  // The Person's email address
+  string email = 2 [(buf.validate.field) = {
+    required: true,
+    string: {
+      email: true,
+    },
+  }];
+
+  // The Person's Address(es)
+  repeated Address addresses = 3 [(buf.validate.field) = {
+    required: true,
+  }];
+
+  // The Person's favorite pet
+  Pet favorite_pet = 4 [(buf.validate.field) = {
+    required: false,
+  }];
+}
+
+// Address is an example message describing an address
+message Address {
+  // The unique identifier of an Address
+  string id = 1 [(buf.validate.field) = {
+    required: true,
+    string: {
+      uuid: true,
+    },
+  }];
+
+  // The actual data for the Address
+  AddressData data = 2 [(buf.validate.field) = {
+    required: true,
+  }];
+}
+
+// Address Data is an example message containing the actual data for an Address
+message AddressData {
+  // The ID of the Person to which the Address belongs
+  string person_id = 1 [(buf.validate.field) = {
+    required: true,
+    string: {
+      uuid: true,
+    },
+  }];
+
+  // The first line of the Address
+  string line1 = 2 [(buf.validate.field) = {
+    required: true,
+    string: {
+      min_len: 1,
+      max_len: 40,
+    },
+  }];
+
+  // The second line of the Address
+  string line2 = 3 [(buf.validate.field) = {
+    required: false,
+    string: {
+      min_len: 0,
+      max_len: 40,
+    },
+  }];
+
+  // The third line of the Address
+  string line3 = 4 [(buf.validate.field) = {
+    required: false,
+    string: {
+      min_len: 0,
+      max_len: 40,
+    },
+  }];
+
+  // The Address's city
+  string city = 5 [(buf.validate.field) = {
+    required: true,
+    string: {
+      min_len: 1,
+      max_len: 40,
+    },
+  }];
+
+  // The Address's region
+  string region = 6 [(buf.validate.field) = {
+    required: false,
+    string: {
+      min_len: 0,
+      max_len: 40,
+    },
+  }];
+
+  // The postcode or zip of the Address
+  string postal_code = 7 [(buf.validate.field) = {
+    required: false,
+    string: {
+      min_len: 0,
+      max_len: 40,
+    },
+  }];
+
+  // The 3-character ISO country code of the Address
+  string country_code = 8 [(buf.validate.field) = {
+    required: true,
+    string: {
+      min_len: 3,
+      max_len: 3,
+    },
+  }];
 }

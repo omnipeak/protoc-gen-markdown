@@ -9,6 +9,14 @@ It can also generate [Mermaid diagrams](https://mermaid.js.org/) via additional 
 
 ## Usage
 
+### With buf
+
+```shell
+buf generate ./example/protos
+```
+
+### With protoc directly
+
 ```shell
 # Standard usage
 protoc -I./example/protos/ \

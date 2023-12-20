@@ -1,9 +1,23 @@
 {
   "cSpell.words": [
+    "bufbuild",
+    "descriptorpb",
+    "dynamicpb",
     "flavored",
     "gchr",
     "omnipeak",
+    "pluginpb",
+    "protobuf",
     "protoc",
-    "protovalidate"
-  ]
+    "protocolbuffers",
+    "protogen",
+    "protoreflect",
+    "protoregistry",
+    "protovalidate",
+    "stretchr",
+    "tgorton"
+  ],
+  "protoc": {
+    "options": ["-I=${workspaceFolder}/example/protos/vendor"],
+  }
 }

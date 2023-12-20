@@ -1,0 +1,129 @@
+syntax = "proto3";
+
+package example.protos;
+
+import "buf/validate/validate.proto";
+import "example/protos/models.proto";
+
+// PersonService is the service for managing Person objects
+service PersonService {
+  // Creates a Person
+  rpc CreatePerson (CreatePersonRequest) returns (CreatePersonResponse) {}
+
+  // Retrieves a Person
+  rpc RetrievePerson (RetrievePersonRequest) returns (RetrievePersonResponse) {}
+
+  // Lists people
+  rpc ListPeople (ListPeopleRequest) returns (ListPeopleResponse) {}
+
+  // Updates a Person
+  rpc UpdatePerson (UpdatePersonRequest) returns (UpdatePersonResponse) {}
+
+  // Deletes one or more Person objects
+  rpc DeletePeople (DeletePeopleRequest) returns (DeletePeopleResponse) {}
+}
+
+// CreatePersonRequest is the request for creating a Person
+message CreatePersonRequest {
+  // The Person's Name
+  string name = 1 [(buf.validate.field) = {
+    required: true,
+    string: {
+      min_len: 1,
+      max_len: 100,
+    },
+  }];
+
+  // The Person's email address
+  string email = 2 [(buf.validate.field) = {
+    required: true,
+    string: {
+      email: true,
+    },
+  }];
+
+  // The Person's Address(es)
+  repeated AddressData addresses = 3 [(buf.validate.field) = {
+    required: true,
+    repeated: {
+      min_items: 1,
+    },
+  }];
+
+  // The Person's favorite pet
+  Pet favorite_pet = 4 [(buf.validate.field) = {
+    required: false,
+  }];
+}
+
+// CreatePersonResponse is the response for creating a Person
+message CreatePersonResponse {
+  // The error which occurred, if any
+  string error = 1;
+
+  // The Person which was created, if no error
+  Person person = 2;
+}
+
+// RetrievePersonRequest is the request for retrieving a Person
+message RetrievePersonRequest {
+  // The ID of the Person to retrieve
+  string id = 1;
+}
+
+// RetrievePersonResponse is the response for retrieving a Person
+message RetrievePersonResponse {
+  // The error which occurred, if any
+  string error = 1;
+
+  // The Person which was created, if no error
+  Person person = 2;
+}
+
+// ListPeopleRequest is the request for listing people
+message ListPeopleRequest {
+  // The page of data to retrieve
+  int32 page = 1;
+
+  // The number of Person objects per page
+  int32 page_size = 2;
+}
+
+// ListPeopleResponse is the response for listing Person objects
+message ListPeopleResponse {
+  // The error which occurred, if any
+  string error = 1;
+
+  // A list of Person objects matching the request parameters
+  repeated Person people = 2;
+}
+
+// UpdatePersonResponse is the response for updating a Person
+message UpdatePersonRequest {
+  // The data to update the Person with
+  Person data = 1;
+}
+
+// UpdatePersonResponse is the response for updating a Person
+message UpdatePersonResponse {
+  // The error which occurred, if any
+  string error = 1;
+
+  // Person is the updated person
+  Person person = 2;
+}
+
+// DeletePeopleRequest is the request for deleting a Person
+message DeletePeopleRequest {
+  // Id is the id of the Person to delete
+  string id = 1;
+}
+
+// DeletePeopleResponse is the response for deleting People
+message DeletePeopleResponse {
+  // The error which occurred, if any
+  string error = 1;
+
+  // The IDs of the Person objects that were deleted
+  repeated string ids = 2;
+}
