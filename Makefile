@@ -1,7 +1,7 @@
 # Builds protoc-gen-markdown
 .PHONY: build
 build:
-	go build -o protoc-gen-markdown ./main.go
+	go build -o protoc-gen-markdown ./cmd/protoc-gen-markdown/main.go
 
 # Builds the docker image
 .PHONY: build-docker-image
