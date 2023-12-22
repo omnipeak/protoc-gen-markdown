@@ -22,6 +22,14 @@ func (sd *serviceData) GetTableData() (*serviceTableData, error) {
 		rows:       []*serviceTableMethodRow{},
 	}
 
+	pathPrefix := strings.Repeat(
+		"../",
+		strings.Count(
+			sd.svc.Location.SourceFile,
+			"/",
+		),
+	)
+
 	for _, methodName := range sd.methodsOrder {
 		method, ok := sd.methods[methodName]
 		if !ok {
@@ -33,16 +41,32 @@ func (sd *serviceData) GetTableData() (*serviceTableData, error) {
 			description: method.description,
 		}
 
-		inputBits := []string{}
-		for _, p := range method.params {
-			inputBits = append(inputBits, fmt.Sprintf("[`%s`](#%s)", p, strings.ToLower(p)))
-		}
+		link := ""
 
-		row.inputs = strings.Join(inputBits, ", ")
-		row.response = fmt.Sprintf("[`%s`](#%s)", method.response, strings.ToLower(method.response))
+		if method.requestMessage.Location.SourceFile != sd.svc.Location.SourceFile {
+			link += pathPrefix + strings.ReplaceAll(
+				string(method.requestMessage.Location.SourceFile),
+				".proto",
+				".md",
+			)
+		}
+		link += "#" + strings.ToLower(method.request) + "-message"
+
+		row.request = fmt.Sprintf("[`%s`](%s)", method.request, link)
+
+		link = ""
+		if method.responseMessage.Location.SourceFile != sd.svc.Location.SourceFile {
+			link += pathPrefix + strings.ReplaceAll(
+				string(method.responseMessage.Location.SourceFile),
+				".proto",
+				".md",
+			)
+		}
+		link += "#" + strings.ToLower(method.response) + "-message"
+		row.response = fmt.Sprintf("[`%s`](%s)", method.response, link)
 
 		utils.StringGTLengthHelper(&data.colLengths[0], row.methodName)
-		utils.StringGTLengthHelper(&data.colLengths[1], row.inputs)
+		utils.StringGTLengthHelper(&data.colLengths[1], row.request)
 		utils.StringGTLengthHelper(&data.colLengths[2], row.response)
 		utils.StringGTLengthHelper(&data.colLengths[3], row.description)
 
@@ -53,10 +77,12 @@ func (sd *serviceData) GetTableData() (*serviceTableData, error) {
 }
 
 type serviceMethodData struct {
-	methodName  string
-	params      []string
-	response    string
-	description string
+	methodName      string
+	request         string
+	requestMessage  *protogen.Message
+	response        string
+	responseMessage *protogen.Message
+	description     string
 }
 
 type serviceTableData struct {
@@ -66,7 +92,7 @@ type serviceTableData struct {
 
 type serviceTableMethodRow struct {
 	methodName  string
-	inputs      string
+	request     string
 	response    string
 	description string
 }

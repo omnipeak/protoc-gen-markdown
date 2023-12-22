@@ -19,12 +19,14 @@ func (c *converter) processService(g *protogen.GeneratedFile, svc *protogen.Serv
 	for _, m := range svc.Methods {
 		method := &serviceMethodData{
 			methodName:  string(m.Desc.Name()),
-			params:      []string{},
 			description: utils.FlattenComment(m.Comments.Leading.String() + "\n\n" + m.Comments.Trailing.String()),
 		}
 
-		method.params = append(method.params, string(m.Input.Desc.Name()))
+		method.request = string(m.Input.Desc.Name())
+		method.requestMessage = m.Input
+
 		method.response = string(m.Output.Desc.Name())
+		method.responseMessage = m.Output
 
 		data.methods[method.methodName] = method
 		data.methodsOrder = append(data.methodsOrder, method.methodName)
@@ -36,7 +38,8 @@ func (c *converter) processService(g *protogen.GeneratedFile, svc *protogen.Serv
 }
 
 func (c *converter) writeServiceFieldsTable(g *protogen.GeneratedFile, data *serviceData) error {
-	g.P("## ", data.serviceName)
+	g.P()
+	g.P("### ", data.serviceName, " service")
 	g.P()
 
 	if data.description != "" {
@@ -44,7 +47,7 @@ func (c *converter) writeServiceFieldsTable(g *protogen.GeneratedFile, data *ser
 		g.P()
 	}
 
-	g.P("### Methods")
+	g.P("#### Methods")
 	g.P()
 
 	tableData, err := data.GetTableData()
@@ -74,13 +77,11 @@ func (c *converter) writeServiceFieldsTable(g *protogen.GeneratedFile, data *ser
 		g.P(fmt.Sprintf(
 			tpl,
 			utils.PadRight(row.methodName, " ", tableData.colLengths[0]),
-			utils.PadRight(row.inputs, " ", tableData.colLengths[1]),
+			utils.PadRight(row.request, " ", tableData.colLengths[1]),
 			utils.PadRight(row.response, " ", tableData.colLengths[2]),
 			utils.PadRight(row.description, " ", tableData.colLengths[3]),
 		))
 	}
-
-	g.P()
 
 	return nil
 }

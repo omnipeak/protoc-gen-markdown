@@ -35,21 +35,69 @@ func (data *messageData) GetTableData() (*messageTableData, error) {
 			required:    field.required,
 		}
 
+		pathPrefix := strings.Repeat(
+			"../",
+			strings.Count(
+				data.message.Location.SourceFile,
+				"/",
+			),
+		)
+
+		var typeName string
+		var typeLink string
 		switch field.fieldType {
-		case "message", "enum":
-			typeName := field.fieldMessage
+		case "enum":
+			typeName = string(field.fieldEnum.Desc.Name())
+			if field.fieldEnum.Location.SourceFile != data.message.Location.SourceFile {
+				typeLink += pathPrefix + strings.ReplaceAll(
+					string(field.fieldEnum.Location.SourceFile),
+					".proto",
+					".md",
+				)
+			}
+			typeLink += "#" + strings.ToLower(typeName) + "-enum"
+
 			if field.isList {
 				typeName += "[]"
 			}
 
 			row.fieldType = fmt.Sprintf(
-				"[`%s`](#%s)",
+				"[`%s`](%s)",
 				typeName,
-				strings.ToLower(field.fieldMessage),
+				typeLink,
 			)
 
+		case "message":
+			if field.fieldMessage.Desc.IsMapEntry() {
+				row.fieldType = fmt.Sprintf(
+					"`map<%s, %s>`",
+					field.fieldMessage.Fields[0].Desc.Kind().String(),
+					field.fieldMessage.Fields[1].Desc.Kind().String(),
+				)
+			} else {
+				typeName = string(field.fieldMessage.Desc.Name())
+				if field.fieldMessage.Location.SourceFile != data.message.Location.SourceFile {
+					typeLink += pathPrefix + strings.ReplaceAll(
+						string(field.fieldMessage.Location.SourceFile),
+						".proto",
+						".md",
+					)
+				}
+				typeLink += "#" + strings.ToLower(typeName) + "-message"
+
+				if field.isList {
+					typeName += "[]"
+				}
+
+				row.fieldType = fmt.Sprintf(
+					"[`%s`](%s)",
+					typeName,
+					typeLink,
+				)
+			}
+
 		default:
-			typeName := field.fieldType
+			typeName = field.fieldType
 			if field.isList {
 				typeName += "[]"
 			}
@@ -70,7 +118,8 @@ func (data *messageData) GetTableData() (*messageTableData, error) {
 type messageField struct {
 	fieldName    string
 	fieldType    string
-	fieldMessage string
+	fieldEnum    *protogen.Enum
+	fieldMessage *protogen.Message
 	isList       bool
 	required     bool
 	description  string

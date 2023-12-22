@@ -41,7 +41,8 @@ func (c *converter) processEnum(g *protogen.GeneratedFile, enum *protogen.Enum) 
 }
 
 func (c *converter) writeEnumFieldsTable(g *protogen.GeneratedFile, data *enumData) error {
-	g.P("## ", data.enumName)
+	g.P()
+	g.P("### ", data.enumName, " enum")
 	g.P()
 
 	if data.description != "" {
@@ -75,8 +76,6 @@ func (c *converter) writeEnumFieldsTable(g *protogen.GeneratedFile, data *enumDa
 			utils.PadRight(row.description, " ", tableData.colLengths[1]),
 		))
 	}
-
-	g.P()
 
 	return nil
 }
