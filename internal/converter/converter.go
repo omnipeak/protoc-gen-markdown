@@ -2,7 +2,6 @@ package converter
 
 import (
 	"flag"
-	"fmt"
 	"log"
 	"path"
 	"strings"
@@ -67,14 +66,6 @@ func (c *converter) generate(plugin *protogen.Plugin) error {
 		}
 	}
 
-	f := plugin.NewGeneratedFile("index.md", "")
-	f.P("# Index")
-	f.P()
-
-	for i, _ := range c.packages {
-		f.P(fmt.Sprintf("- %s", i))
-	}
-
 	return nil
 }
 
@@ -122,24 +113,75 @@ func (c *converter) processFile(plugin *protogen.Plugin, file *protogen.File) er
 		),
 	)
 
+	writeServices := file.Services != nil && len(file.Services) > 0
+	writeMessages := file.Messages != nil && len(file.Messages) > 0
+	writeEnums := file.Enums != nil && len(file.Enums) > 0
+
+	if !writeServices && !writeMessages && !writeEnums {
+		return nil
+	}
+
 	g.P("# ", fileName)
 	g.P()
+	g.P("## Table of Contents")
 
-	for _, service := range file.Services {
-		if err := c.processService(g, service); err != nil {
-			return err
+	if writeServices {
+		g.P()
+		g.P("- [Services](#services)")
+
+		for _, svc := range file.Services {
+			g.P("  - [", svc.Desc.Name(), "](#", strings.ToLower(string(svc.Desc.Name())), "-service)")
 		}
 	}
 
-	for _, enum := range file.Enums {
-		if err := c.processEnum(g, enum); err != nil {
-			return err
+	if writeMessages {
+		g.P()
+		g.P("- [Messages](#messages)")
+
+		for _, msg := range file.Messages {
+			g.P("  - [", msg.Desc.Name(), "](#", strings.ToLower(string(msg.Desc.Name())), "-message)")
 		}
 	}
 
-	for _, message := range file.Messages {
-		if err := c.processMessage(g, message); err != nil {
-			return err
+	if writeEnums {
+		g.P()
+		g.P("- [Enums](#enums)")
+
+		for _, enm := range file.Enums {
+			g.P("  - [", enm.Desc.Name(), "](#", strings.ToLower(string(enm.Desc.Name())), "-enum)")
+		}
+	}
+
+	if writeServices {
+		g.P()
+		g.P("## Services")
+
+		for _, svc := range file.Services {
+			if err := c.processService(g, svc); err != nil {
+				return err
+			}
+		}
+	}
+
+	if writeMessages {
+		g.P()
+		g.P("## Messages")
+
+		for _, msg := range file.Messages {
+			if err := c.processMessage(g, msg); err != nil {
+				return err
+			}
+		}
+	}
+
+	if writeEnums {
+		g.P()
+		g.P("## Enums")
+
+		for _, enm := range file.Enums {
+			if err := c.processEnum(g, enm); err != nil {
+				return err
+			}
 		}
 	}
 

@@ -2,7 +2,6 @@ package converter
 
 import (
 	"fmt"
-	"strings"
 
 	"buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go/buf/validate"
 	"google.golang.org/protobuf/compiler/protogen"
@@ -36,11 +35,11 @@ func (c *converter) processMessage(g *protogen.GeneratedFile, message *protogen.
 		switch f.Desc.Kind() {
 		case protoreflect.EnumKind:
 			field.fieldType = "enum"
-			field.fieldMessage = string(f.Enum.Desc.Name())
+			field.fieldEnum = f.Enum
 
 		case protoreflect.MessageKind:
 			field.fieldType = "message"
-			field.fieldMessage = string(f.Message.Desc.Name())
+			field.fieldMessage = f.Message
 
 		default:
 			field.fieldType = f.Desc.Kind().String()
@@ -87,7 +86,8 @@ func (c *converter) processFieldOptions(
 }
 
 func (c *converter) writeMessageFieldsTable(f *protogen.GeneratedFile, messageData *messageData) error {
-	f.P("## ", messageData.messageName)
+	f.P()
+	f.P("### ", messageData.messageName, " message")
 	f.P()
 
 	if messageData.description != "" {
@@ -128,13 +128,16 @@ func (c *converter) writeMessageFieldsTable(f *protogen.GeneratedFile, messageDa
 		))
 	}
 
-	f.P()
-
 	return nil
 }
 
 func (c *converter) writeMessageFieldValidationTable(f *protogen.GeneratedFile, messageData *messageData) error {
-	for _, field := range messageData.fields {
+	for _, fieldName := range messageData.fieldsOrder {
+		field, ok := messageData.fields[fieldName]
+		if !ok {
+			return fmt.Errorf("field %s not found", fieldName)
+		}
+
 		if field.options == nil {
 			continue
 		}
@@ -143,152 +146,17 @@ func (c *converter) writeMessageFieldValidationTable(f *protogen.GeneratedFile, 
 
 		items := []string{}
 
-		// TODO: There's got to be a better way to do this...
-		if s := field.options.GetString_(); s != nil {
-			if s.Const != nil {
-				items = append(items, fmt.Sprintf("Must be `%s`", *s.Const))
-			}
-
-			if s.Contains != nil {
-				items = append(items, fmt.Sprintf("Must contain `%s`", *s.Contains))
-			}
-
-			if s.In != nil {
-				items = append(items, fmt.Sprintf("Must be one of: `%s`", strings.Join(s.In, "`, `")))
-			}
-
-			if s.Len != nil {
-				msg := "Exactly %d character%s long"
-				if ignoreEmpty {
-					msg = "Must be empty, or exactly %d character%s long"
-				}
-
-				items = append(items, fmt.Sprintf(msg, *s.Len, utils.PluralSuffix(int(*s.Len), "s", "")))
-			}
-
-			if s.MinLen != nil {
-				msg := "Must be at least %d character%s long"
-				if ignoreEmpty {
-					msg = "Must be empty, or at least %d character%s long"
-				}
-
-				items = append(items, fmt.Sprintf(msg, *s.MinLen, utils.PluralSuffix(int(*s.MinLen), "s", "")))
-			}
-
-			if s.MaxLen != nil {
-				items = append(items, fmt.Sprintf("Must be %d or fewer character%s long", *s.MaxLen, utils.PluralSuffix(int(*s.MaxLen), "s", "")))
-			}
-
-			if s.LenBytes != nil {
-				msg := "Exactly %d byte%s long"
-				if ignoreEmpty {
-					msg = "Must be empty, or exactly %d byte%s long"
-				}
-
-				items = append(items, fmt.Sprintf(msg, *s.LenBytes, utils.PluralSuffix(int(*s.LenBytes), "s", "")))
-			}
-
-			if s.MinBytes != nil {
-				msg := "Must be at least %d byte%s long"
-				if ignoreEmpty {
-					msg = "Must be empty, or at least %d byte%s long"
-				}
-
-				items = append(items, fmt.Sprintf(msg, *s.MinBytes, utils.PluralSuffix(int(*s.MinBytes), "s", "")))
-			}
-
-			if s.NotContains != nil {
-				items = append(items, fmt.Sprintf("Must not contain `%s`", *s.NotContains))
-			}
-
-			if s.NotIn != nil {
-				items = append(items, fmt.Sprintf("Must not be one of: `%s`", strings.Join(s.NotIn, "`, `")))
-			}
-
-			if s.Pattern != nil {
-				items = append(items, fmt.Sprintf("Must match the regex pattern `%s`", *s.Pattern))
-			}
-
-			if s.Prefix != nil {
-				items = append(items, fmt.Sprintf("Must start with `%s`", *s.Prefix))
-			}
-
-			if s.Suffix != nil {
-				items = append(items, fmt.Sprintf("Must end with `%s`", *s.Suffix))
-			}
-
-			if s.GetAddress() {
-				items = append(items, "Must be a valid hostname or IP address")
-			}
-
-			if s.GetEmail() {
-				items = append(items, "Must be a valid email address")
-			}
-
-			if s.GetHostname() {
-				items = append(items, "Must be a valid hostname")
-			}
-
-			if s.GetIp() {
-				items = append(items, "Must be a valid IP address")
-			}
-
-			if s.GetIpPrefix() {
-				items = append(items, "Must be a valid IP prefix (eg, 20.0.0.0/16)")
-			}
-
-			if s.GetUri() {
-				items = append(items, "Must be a valid URI")
-			}
-
-			if s.GetUriRef() {
-				items = append(items, "Must be a valid URI reference")
-			}
-
-			if s.GetUuid() {
-				items = append(items, "Must be a valid UUID")
-			}
-		}
-
-		if t := field.options.GetTimestamp(); t != nil {
-			if t.Const != nil {
-				items = append(items, fmt.Sprintf("Must be `%s`", t.Const.String()))
-			}
-
-			if t.Within != nil {
-				items = append(items, fmt.Sprintf("Must be within %s of now", t.Within.String()))
-			}
-
-			if t.GetGt() != nil {
-				items = append(items, fmt.Sprintf("Must be after %s", t.GetGt().String()))
-			}
-
-			if t.GetGtNow() {
-				items = append(items, "Must be after now")
-			}
-
-			if t.GetGte() != nil {
-				items = append(items, fmt.Sprintf("Must be equal to or after %s", t.GetGte().String()))
-			}
-
-			if t.GetLt() != nil {
-				items = append(items, fmt.Sprintf("Must be before %s", t.GetLt().String()))
-			}
-
-			if t.GetLtNow() {
-				items = append(items, "Must be before now")
-			}
-
-			if t.GetLte() != nil {
-				items = append(items, fmt.Sprintf("Must be equal to or before %s", t.GetLte().String()))
-			}
-		}
+		items = append(items, getStringValidationRules(field.options.GetString_(), ignoreEmpty)...)
+		items = append(items, getInt32ValidationRules(field.options.GetInt32(), ignoreEmpty)...)
+		items = append(items, getUInt32ValidationRules(field.options.GetUint32(), ignoreEmpty)...)
+		items = append(items, getTimestampValidationRules(field.options.GetTimestamp(), ignoreEmpty)...)
 
 		if len(items) == 0 {
 			continue
 		}
 
-		f.P("### `", messageData.messageName, ".", field.fieldName, "` validation")
+		f.P()
+		f.P("#### `", messageData.messageName, ".", field.fieldName, "` validation")
 		f.P()
 		f.P("The following validation rules apply to the `", field.fieldName, "` field:")
 		f.P()
@@ -297,7 +165,6 @@ func (c *converter) writeMessageFieldValidationTable(f *protogen.GeneratedFile, 
 			f.P("- ", item)
 		}
 
-		f.P()
 	}
 
 	return nil

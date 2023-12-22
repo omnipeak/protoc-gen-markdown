@@ -15,12 +15,11 @@ func getTestMessageData() *messageData {
 		description: "This is a test message",
 		fields: map[string]*messageField{
 			"field1": {
-				fieldName:    "field1",
-				fieldType:    "string",
-				fieldMessage: "",
-				description:  "This is a test field",
-				required:     true,
-				isList:       true,
+				fieldName:   "field1",
+				fieldType:   "string",
+				description: "This is a test field",
+				required:    true,
+				isList:      true,
 				options: &validate.FieldConstraints{
 					Required: true,
 					Type: &validate.FieldConstraints_String_{
@@ -32,12 +31,13 @@ func getTestMessageData() *messageData {
 				},
 			},
 			"field2": {
-				fieldName:    "field2",
-				fieldType:    "message",
-				fieldMessage: "TestMessage2",
-				description:  "This is another test field",
-				required:     false,
-				isList:       false,
+				fieldName: "field2",
+				fieldType: "message",
+				// TODO: Populate this with a test message
+				// fieldMessage: ,
+				description: "This is another test field",
+				required:    false,
+				isList:      false,
 			},
 		},
 		fieldsOrder: []string{"field1", "field2"},

@@ -17,7 +17,17 @@
     "stretchr",
     "tgorton"
   ],
+  "editor.renderWhitespace": "all",
   "protoc": {
     "options": ["-I=${workspaceFolder}/example/protos/vendor"],
+  },
+  "[go]": {
+    "editor.indentSize": 2,
+    "editor.tabSize": 2,
+    "editor.insertSpaces": false,
+    "editor.formatOnSave": true,
+    "editor.codeActionsOnSave": {
+      "source.organizeImports": true
+    }
   }
 }
