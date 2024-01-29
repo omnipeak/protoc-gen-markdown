@@ -3,7 +3,7 @@ module github.com/omnipeak/protoc-gen-markdown
 go 1.21.6
 
 require (
-	buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go v1.31.0-20231115204500-e097f827e652.2
+	buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go v1.32.0-20231115204500-e097f827e652.1
 	github.com/stretchr/testify v1.8.4
 	golang.org/x/text v0.14.0
 	google.golang.org/protobuf v1.32.0
