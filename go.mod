@@ -1,6 +1,6 @@
 module github.com/omnipeak/protoc-gen-markdown
 
-go 1.21.6
+go 1.22.0
 
 require (
 	buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go v1.32.0-20240212200630-3014d81c3a48.1
