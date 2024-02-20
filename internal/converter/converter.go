@@ -128,6 +128,7 @@ func (c *converter) processFile(plugin *protogen.Plugin, file *protogen.File) er
 	if writeServices {
 		g.P()
 		g.P("- [Services](#services)")
+		g.P()
 
 		for _, svc := range file.Services {
 			g.P("  - [", svc.Desc.Name(), "](#", strings.ToLower(string(svc.Desc.Name())), "-service)")
@@ -137,6 +138,7 @@ func (c *converter) processFile(plugin *protogen.Plugin, file *protogen.File) er
 	if writeMessages {
 		g.P()
 		g.P("- [Messages](#messages)")
+		g.P()
 
 		for _, msg := range file.Messages {
 			g.P("  - [", msg.Desc.Name(), "](#", strings.ToLower(string(msg.Desc.Name())), "-message)")
@@ -146,6 +148,7 @@ func (c *converter) processFile(plugin *protogen.Plugin, file *protogen.File) er
 	if writeEnums {
 		g.P()
 		g.P("- [Enums](#enums)")
+		g.P()
 
 		for _, enm := range file.Enums {
 			g.P("  - [", enm.Desc.Name(), "](#", strings.ToLower(string(enm.Desc.Name())), "-enum)")
