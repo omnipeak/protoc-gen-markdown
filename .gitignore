@@ -1,3 +1,4 @@
 /protoc-gen-markdown
 /node_modules/*
-
+.coverage.html
+.coverage.out
