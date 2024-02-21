@@ -1,8 +1,6 @@
 package converter
 
 import (
-	"fmt"
-
 	"github.com/omnipeak/protoc-gen-markdown/internal/utils"
 	"google.golang.org/protobuf/compiler/protogen"
 )
@@ -55,33 +53,5 @@ func (c *converter) writeServiceFieldsTable(g *protogen.GeneratedFile, data *ser
 		return err
 	}
 
-	tpl := "| %s | %s | %s | %s |"
-
-	g.P(fmt.Sprintf(
-		tpl,
-		utils.PadRight("Method", " ", tableData.colLengths[0]),
-		utils.PadRight("Inputs", " ", tableData.colLengths[1]),
-		utils.PadRight("Response", " ", tableData.colLengths[2]),
-		utils.PadRight("Description", " ", tableData.colLengths[3]),
-	))
-
-	g.P(fmt.Sprintf(
-		tpl,
-		utils.PadRight("", "-", tableData.colLengths[0]),
-		utils.PadRight("", "-", tableData.colLengths[1]),
-		utils.PadRight("", "-", tableData.colLengths[2]),
-		utils.PadRight("", "-", tableData.colLengths[3]),
-	))
-
-	for _, row := range tableData.rows {
-		g.P(fmt.Sprintf(
-			tpl,
-			utils.PadRight(row.methodName, " ", tableData.colLengths[0]),
-			utils.PadRight(row.request, " ", tableData.colLengths[1]),
-			utils.PadRight(row.response, " ", tableData.colLengths[2]),
-			utils.PadRight(row.description, " ", tableData.colLengths[3]),
-		))
-	}
-
-	return nil
+	return utils.WriteTable(g, tableData)
 }

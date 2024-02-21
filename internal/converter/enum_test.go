@@ -1,6 +1,7 @@
 package converter
 
 import (
+	"github.com/omnipeak/protoc-gen-markdown/internal/utils"
 	"google.golang.org/protobuf/compiler/protogen"
 )
 
@@ -23,29 +24,30 @@ func getTestEnumData() *enumData {
 	}
 }
 
-func getTestEnumTableData() *enumTableData {
-	return &enumTableData{
-		colLengths: []int{12, 24},
-		rows: []*enumTableFieldRow{
+func getTestEnumTableData() *utils.TableData {
+	return &utils.TableData{
+		Headers: []string{"Value", "Description"},
+		Rows: [][]string{
 			{
-				valueName:   "`TestValue1`",
-				description: "Test value 1 description",
+				"`TestValue1`",
+				"Test value 1 description",
 			},
 			{
-				valueName:   "`TestValue2`",
-				description: "Test value 2 description",
+				"`TestValue2`",
+				"Test value 2 description",
 			},
 		},
 	}
 }
 
 func getTestEnumMarkdownResult() string {
-	return "## TestEnum\n\n" +
+	return "\n" +
+		"### TestEnum enum\n\n" +
 		"Test enum description\n\n" +
 		"| Value        | Description              |\n" +
 		"| ------------ | ------------------------ |\n" +
 		"| `TestValue1` | Test value 1 description |\n" +
-		"| `TestValue2` | Test value 2 description |\n\n"
+		"| `TestValue2` | Test value 2 description |\n"
 }
 
 func (ts *ConverterTestSuite) TestGetEnumTableData() {

@@ -1,6 +1,7 @@
 package converter
 
 import (
+	"github.com/omnipeak/protoc-gen-markdown/internal/utils"
 	"google.golang.org/protobuf/compiler/protogen"
 )
 
@@ -15,46 +16,72 @@ func getTestServiceData() *serviceData {
 				request:     "Request1",
 				response:    "Response1",
 				description: "This is test method 1's description",
+				requestMessage: &protogen.Message{
+					Location: protogen.Location{
+						SourceFile: "test.proto",
+					},
+				},
+				responseMessage: &protogen.Message{
+					Location: protogen.Location{
+						SourceFile: "test2.proto",
+					},
+				},
 			},
 			"Method2": {
 				methodName:  "Method2",
 				request:     "Request2",
 				response:    "Response2",
 				description: "This is test method 2's description",
+				requestMessage: &protogen.Message{
+					Location: protogen.Location{
+						SourceFile: "test3.proto",
+					},
+				},
+				responseMessage: &protogen.Message{
+					Location: protogen.Location{
+						SourceFile: "test4.proto",
+					},
+				},
 			},
 		},
 		methodsOrder: []string{"Method1", "Method2"},
 	}
 }
 
-func getTestServiceTableData() *serviceTableData {
-	return &serviceTableData{
-		colLengths: []int{9, 40, 25, 35},
-		rows: []*serviceTableMethodRow{
+func getTestServiceTableData() *utils.TableData {
+	return &utils.TableData{
+		Headers: []string{
+			"Method",
+			"Request",
+			"Response",
+			"Description",
+		},
+		Rows: [][]string{
 			{
-				methodName:  "`Method1`",
-				request:     "[`Request1`](#param1)",
-				response:    "[`Response1`](#response1)",
-				description: "This is test method 1's description",
+				"`Method1`",
+				"[`Request1`](test.md#request1-message)",
+				"[`Response1`](test2.md#response1-message)",
+				"This is test method 1's description",
 			},
 			{
-				methodName:  "`Method2`",
-				request:     "[`Request2`](#param2)",
-				response:    "[`Response2`](#response2)",
-				description: "This is test method 2's description",
+				"`Method2`",
+				"[`Request2`](test3.md#request2-message)",
+				"[`Response2`](test4.md#response2-message)",
+				"This is test method 2's description",
 			},
 		},
 	}
 }
 
 func getTestServiceMarkdownResult() string {
-	return "## TestService\n\n" +
+	return "\n" +
+		"### TestService service\n\n" +
 		"This is a test service\n\n" +
-		"### Methods\n\n" +
-		"| Method    | Inputs                | Response                  | Description                         |\n" +
-		"| --------- | --------------------- | ------------------------- | ----------------------------------- |\n" +
-		"| `Method1` | [`Request1`](#param1) | [`Response1`](#response1) | This is test method 1's description |\n" +
-		"| `Method2` | [`Request2`](#param2) | [`Response2`](#response2) | This is test method 2's description |\n\n"
+		"#### Methods\n\n" +
+		"| Method    | Request                                 | Response                                  | Description                         |\n" +
+		"| --------- | --------------------------------------- | ----------------------------------------- | ----------------------------------- |\n" +
+		"| `Method1` | [`Request1`](test.md#request1-message)  | [`Response1`](test2.md#response1-message) | This is test method 1's description |\n" +
+		"| `Method2` | [`Request2`](test3.md#request2-message) | [`Response2`](test4.md#response2-message) | This is test method 2's description |\n"
 }
 
 func (ts *ConverterTestSuite) TestGetServiceTableData() {
