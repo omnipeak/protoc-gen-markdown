@@ -15,43 +15,38 @@ type enumData struct {
 	valuesOrder []string
 }
 
-func (data *enumData) GetTableData() (*enumTableData, error) {
-	tableData := &enumTableData{
-		colLengths: []int{0, 0},
-		rows:       []*enumTableFieldRow{},
+func (data *enumData) GetTableData() (*utils.TableData, error) {
+	tableData := &utils.TableData{
+		Headers: []string{"Value", "Description"},
+		Rows:    [][]string{},
+	}
+
+	if len(data.values) != len(data.valuesOrder) {
+		return nil, fmt.Errorf(
+			"values and valuesOrder slice lengths do not match: %d != %d",
+			len(data.values),
+			len(data.valuesOrder),
+		)
 	}
 
 	for _, valueKey := range data.valuesOrder {
 		value, ok := data.values[valueKey]
 		if !ok {
-			return nil, fmt.Errorf("value %s not found", valueKey)
+			return nil, fmt.Errorf("value '%s' not found in enum data", valueKey)
 		}
 
-		row := &enumTableFieldRow{
-			valueName:   fmt.Sprintf("`%s`", valueKey),
-			description: value.description,
+		row := []string{
+			fmt.Sprintf("`%s`", valueKey),
+			value.description,
 		}
 
-		tableData.rows = append(tableData.rows, row)
-
-		utils.StringGTLengthHelper(&tableData.colLengths[0], row.valueName)
-		utils.StringGTLengthHelper(&tableData.colLengths[1], row.description)
+		tableData.Rows = append(tableData.Rows, row)
 	}
 
 	return tableData, nil
 }
 
 type enumValue struct {
-	valueName   string
-	description string
-}
-
-type enumTableData struct {
-	colLengths []int
-	rows       []*enumTableFieldRow
-}
-
-type enumTableFieldRow struct {
 	valueName   string
 	description string
 }

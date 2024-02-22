@@ -3,6 +3,8 @@ package converter
 import (
 	"buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go/buf/validate"
 	"google.golang.org/protobuf/compiler/protogen"
+
+	"github.com/omnipeak/protoc-gen-markdown/internal/utils"
 )
 
 func getTestMessageData() *messageData {
@@ -32,9 +34,10 @@ func getTestMessageData() *messageData {
 			},
 			"field2": {
 				fieldName: "field2",
-				fieldType: "message",
-				// TODO: Populate this with a test message
-				// fieldMessage: ,
+				fieldType: "[`TestMessage2`](#testmessage2)",
+				// TODO: Mock up a message here, though this is already tested via the broader context of converter_test.go
+				// fieldType: "message",
+				// fieldMessage: &protogen.Message{},
 				description: "This is another test field",
 				required:    false,
 				isList:      false,
@@ -44,33 +47,39 @@ func getTestMessageData() *messageData {
 	}
 }
 
-func getTestMessageTableData() *messageTableData {
-	return &messageTableData{
-		colLengths: []int{8, 31, 9, 26},
-		rows: []*messageTableFieldRow{
+func getTestMessageTableData() *utils.TableData {
+	return &utils.TableData{
+		Headers: []string{
+			"Name",
+			"Type",
+			"Required?",
+			"Description",
+		},
+		Rows: [][]string{
 			{
-				fieldName:   "`field1`",
-				fieldType:   "`string[]`",
-				description: "This is a test field",
-				required:    true,
+				"`field1`",
+				"`string[]`",
+				"✅",
+				"This is a test field",
 			},
 			{
-				fieldName:   "`field2`",
-				fieldType:   "[`TestMessage2`](#testmessage2)",
-				description: "This is another test field",
-				required:    false,
+				"`field2`",
+				"[`TestMessage2`](#testmessage2)",
+				"❌",
+				"This is another test field",
 			},
 		},
 	}
 }
 
 func getTestMessageMarkdownResult() string {
-	return "## TestMessage\n\n" +
+	return "\n" +
+		"### TestMessage message\n\n" +
 		"This is a test message\n\n" +
 		"| Name     | Type                            | Required? | Description                |\n" +
 		"| -------- | ------------------------------- | --------- | -------------------------- |\n" +
 		"| `field1` | `string[]`                      | ✅         | This is a test field       |\n" +
-		"| `field2` | [`TestMessage2`](#testmessage2) | ❌         | This is another test field |\n\n"
+		"| `field2` | [`TestMessage2`](#testmessage2) | ❌         | This is another test field |\n"
 }
 
 func (ts *ConverterTestSuite) TestGetMessageTableData() {

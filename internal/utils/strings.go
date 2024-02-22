@@ -4,6 +4,8 @@ import (
 	"regexp"
 	"strings"
 	"unicode/utf8"
+
+	"github.com/pkg/errors"
 )
 
 func StringGTLengthHelper(v *int, s string) {
@@ -28,6 +30,24 @@ func PadRight(s string, padWith string, wantedLength int) string {
 	}
 
 	return output
+}
+
+func PadRightSlice(inputs []string, padWith string, padTo []int) ([]string, error) {
+	if len(inputs) != len(padTo) {
+		return nil, errors.Errorf(
+			"inputs slice length and pad to slice length do not match: %d != %d",
+			len(inputs),
+			len(padTo),
+		)
+	}
+
+	output := make([]string, len(inputs))
+
+	for i, v := range inputs {
+		output[i] = PadRight(v, padWith, padTo[i])
+	}
+
+	return output, nil
 }
 
 func BoolToTickOrCross(b bool) string {

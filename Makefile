@@ -24,7 +24,10 @@ push-buf-image:
 # Runs buf generate
 .PHONY: generate
 generate:
-	buf generate ./example/protos
+	@buf generate \
+		--path ./example/protos/models.proto \
+		--path ./example/protos/service.proto \
+		./example/protos
 
 # Runs the unit tests
 .PHONY: coverage

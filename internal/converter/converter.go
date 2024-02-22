@@ -19,12 +19,14 @@ type converter struct {
 	outputMermaidDiagrams bool
 
 	extTypes *protoregistry.Types
+	files    map[string]*protogen.GeneratedFile
 	packages map[string]*packageData
 }
 
 func New() *converter {
 	return &converter{
 		extTypes: new(protoregistry.Types),
+		files:    map[string]*protogen.GeneratedFile{},
 		packages: map[string]*packageData{},
 	}
 }
@@ -69,7 +71,7 @@ func (c *converter) generate(plugin *protogen.Plugin) error {
 	return nil
 }
 
-func (c *converter) addFile(file *protogen.File) {
+func (c *converter) addFile(pl *protogen.Plugin, file *protogen.File, suffix string) *protogen.GeneratedFile {
 	pkgName := string(file.Desc.Package())
 	if _, ok := c.packages[pkgName]; !ok {
 		c.packages[pkgName] = &packageData{
@@ -98,12 +100,16 @@ func (c *converter) addFile(file *protogen.File) {
 	for _, svc := range file.Services {
 		c.packages[pkgName].services[string(svc.Desc.Name())] = svc
 	}
+
+	g := pl.NewGeneratedFile(file.GeneratedFilenamePrefix+suffix, file.GoImportPath)
+
+	c.files[file.GeneratedFilenamePrefix+suffix] = g
+
+	return g
 }
 
-func (c *converter) processFile(plugin *protogen.Plugin, file *protogen.File) error {
-	c.addFile(file)
-
-	g := plugin.NewGeneratedFile(file.GeneratedFilenamePrefix+".md", file.GoImportPath)
+func (c *converter) processFile(pl *protogen.Plugin, file *protogen.File) error {
+	g := c.addFile(pl, file, ".md")
 
 	fileName := cases.Title(language.Und, cases.NoLower).String(
 		strings.ReplaceAll(
@@ -121,40 +127,62 @@ func (c *converter) processFile(plugin *protogen.Plugin, file *protogen.File) er
 		return nil
 	}
 
+	c.writeTOC(g, file, fileName, writeServices, writeMessages, writeEnums)
+
+	return c.writeContent(g, file, writeServices, writeMessages, writeEnums)
+}
+
+func (c *converter) writeTOC(
+	g *protogen.GeneratedFile,
+	file *protogen.File,
+	fileName string,
+	writeServices bool,
+	writeMessages bool,
+	writeEnums bool,
+) {
 	g.P("# ", fileName)
 	g.P()
 	g.P("## Table of Contents")
 
-	if writeServices {
-		g.P()
-		g.P("- [Services](#services)")
-		g.P()
+	c.maybeWriteTOC(g, servicesToNamesSlice(file.Services), writeServices, "Services", "-service")
+	c.maybeWriteTOC(g, messagesToNamesSlice(file.Messages), writeMessages, "Messages", "-message")
+	c.maybeWriteTOC(g, enumsToNamesSlice(file.Enums), writeEnums, "Enums", "-enum")
+}
 
-		for _, svc := range file.Services {
-			g.P("  - [", svc.Desc.Name(), "](#", strings.ToLower(string(svc.Desc.Name())), "-service)")
-		}
+func servicesToNamesSlice(services []*protogen.Service) []string {
+	names := make([]string, len(services))
+	for i, svc := range services {
+		names[i] = string(svc.Desc.Name())
 	}
 
-	if writeMessages {
-		g.P()
-		g.P("- [Messages](#messages)")
-		g.P()
+	return names
+}
 
-		for _, msg := range file.Messages {
-			g.P("  - [", msg.Desc.Name(), "](#", strings.ToLower(string(msg.Desc.Name())), "-message)")
-		}
+func messagesToNamesSlice(messages []*protogen.Message) []string {
+	names := make([]string, len(messages))
+	for i, msg := range messages {
+		names[i] = string(msg.Desc.Name())
 	}
 
-	if writeEnums {
-		g.P()
-		g.P("- [Enums](#enums)")
-		g.P()
+	return names
+}
 
-		for _, enm := range file.Enums {
-			g.P("  - [", enm.Desc.Name(), "](#", strings.ToLower(string(enm.Desc.Name())), "-enum)")
-		}
+func enumsToNamesSlice(enums []*protogen.Enum) []string {
+	names := make([]string, len(enums))
+	for i, enm := range enums {
+		names[i] = string(enm.Desc.Name())
 	}
 
+	return names
+}
+
+func (c *converter) writeContent(
+	g *protogen.GeneratedFile,
+	file *protogen.File,
+	writeServices bool,
+	writeMessages bool,
+	writeEnums bool,
+) error {
 	if writeServices {
 		g.P()
 		g.P("## Services")
@@ -189,6 +217,18 @@ func (c *converter) processFile(plugin *protogen.Plugin, file *protogen.File) er
 	}
 
 	return nil
+}
+
+func (c *converter) maybeWriteTOC(g *protogen.GeneratedFile, names []string, writeServices bool, section string, suffix string) {
+	if writeServices {
+		g.P()
+		g.P("- [", section, "](#", strings.ToLower(section), ")")
+		g.P()
+
+		for _, name := range names {
+			g.P("  - [", name, "](#", strings.ToLower(name), suffix, ")")
+		}
+	}
 }
 
 // func (c *converter) processField(g *protogen.GeneratedFile, field *protogen.Field) error {

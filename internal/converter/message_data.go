@@ -6,6 +6,7 @@ import (
 
 	"buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go/buf/validate"
 	"github.com/omnipeak/protoc-gen-markdown/internal/utils"
+	"github.com/pkg/errors"
 	"google.golang.org/protobuf/compiler/protogen"
 )
 
@@ -17,22 +18,29 @@ type messageData struct {
 	fieldsOrder []string
 }
 
-func (data *messageData) GetTableData() (*messageTableData, error) {
-	res := &messageTableData{
-		colLengths: []int{4, 4, 9, 11},
-		rows:       []*messageTableFieldRow{},
+func (data *messageData) GetTableData() (*utils.TableData, error) {
+	tableData := &utils.TableData{
+		Headers: []string{
+			"Name",
+			"Type",
+			"Required?",
+			"Description",
+		},
+		Rows: [][]string{},
+	}
+
+	if len(data.fields) != len(data.fieldsOrder) {
+		return nil, errors.Errorf(
+			"fields and fieldsOrder lengths do not match: %d != %d",
+			len(data.fields),
+			len(data.fieldsOrder),
+		)
 	}
 
 	for _, fieldKey := range data.fieldsOrder {
 		field, ok := data.fields[fieldKey]
 		if !ok {
-			return nil, fmt.Errorf("field %s not found", fieldKey)
-		}
-
-		row := &messageTableFieldRow{
-			fieldName:   fmt.Sprintf("`%s`", string(field.fieldName)),
-			description: field.description,
-			required:    field.required,
+			return nil, errors.Errorf("field %s not found", fieldKey)
 		}
 
 		pathPrefix := strings.Repeat(
@@ -43,76 +51,91 @@ func (data *messageData) GetTableData() (*messageTableData, error) {
 			),
 		)
 
-		var typeName string
-		var typeLink string
-		switch field.fieldType {
-		case "enum":
-			typeName = string(field.fieldEnum.Desc.Name())
-			if field.fieldEnum.Location.SourceFile != data.message.Location.SourceFile {
-				typeLink += pathPrefix + strings.ReplaceAll(
-					string(field.fieldEnum.Location.SourceFile),
-					".proto",
-					".md",
-				)
-			}
-			typeLink += "#" + strings.ToLower(typeName) + "-enum"
+		fieldType := data.getFieldType(field, pathPrefix)
 
-			if field.isList {
-				typeName += "[]"
-			}
-
-			row.fieldType = fmt.Sprintf(
-				"[`%s`](%s)",
-				typeName,
-				typeLink,
-			)
-
-		case "message":
-			if field.fieldMessage.Desc.IsMapEntry() {
-				row.fieldType = fmt.Sprintf(
-					"`map<%s, %s>`",
-					field.fieldMessage.Fields[0].Desc.Kind().String(),
-					field.fieldMessage.Fields[1].Desc.Kind().String(),
-				)
-			} else {
-				typeName = string(field.fieldMessage.Desc.Name())
-				if field.fieldMessage.Location.SourceFile != data.message.Location.SourceFile {
-					typeLink += pathPrefix + strings.ReplaceAll(
-						string(field.fieldMessage.Location.SourceFile),
-						".proto",
-						".md",
-					)
-				}
-				typeLink += "#" + strings.ToLower(typeName) + "-message"
-
-				if field.isList {
-					typeName += "[]"
-				}
-
-				row.fieldType = fmt.Sprintf(
-					"[`%s`](%s)",
-					typeName,
-					typeLink,
-				)
-			}
-
-		default:
-			typeName = field.fieldType
-			if field.isList {
-				typeName += "[]"
-			}
-
-			row.fieldType = fmt.Sprintf("`%s`", string(typeName))
+		row := []string{
+			fmt.Sprintf("`%s`", string(field.fieldName)),
+			fieldType,
+			utils.BoolToTickOrCross(field.required),
+			field.description,
 		}
 
-		utils.StringGTLengthHelper(&res.colLengths[0], row.fieldName)
-		utils.StringGTLengthHelper(&res.colLengths[1], row.fieldType)
-		utils.StringGTLengthHelper(&res.colLengths[3], row.description)
-
-		res.rows = append(res.rows, row)
+		tableData.Rows = append(tableData.Rows, row)
 	}
 
-	return res, nil
+	return tableData, nil
+}
+
+func (data *messageData) getFieldType(field *messageField, pathPrefix string) string {
+	var typeName string
+	var typeLink string
+	switch field.fieldType {
+	case "enum":
+		typeName = string(field.fieldEnum.Desc.Name())
+		if field.fieldEnum.Location.SourceFile != data.message.Location.SourceFile {
+			typeLink += pathPrefix + strings.ReplaceAll(
+				string(field.fieldEnum.Location.SourceFile),
+				".proto",
+				".md",
+			)
+		}
+		typeLink += "#" + strings.ToLower(typeName) + "-enum"
+
+		if field.isList {
+			typeName += "[]"
+		}
+
+		return fmt.Sprintf(
+			"[`%s`](%s)",
+			typeName,
+			typeLink,
+		)
+
+	case "message":
+		if field.fieldMessage == nil {
+			return "message"
+		}
+
+		if field.fieldMessage.Desc.IsMapEntry() {
+			return fmt.Sprintf(
+				"`map<%s, %s>`",
+				field.fieldMessage.Fields[0].Desc.Kind().String(),
+				field.fieldMessage.Fields[1].Desc.Kind().String(),
+			)
+		}
+
+		typeName = string(field.fieldMessage.Desc.Name())
+		if field.fieldMessage.Location.SourceFile != data.message.Location.SourceFile {
+			typeLink += pathPrefix + strings.ReplaceAll(
+				string(field.fieldMessage.Location.SourceFile),
+				".proto",
+				".md",
+			)
+		}
+		typeLink += "#" + strings.ToLower(typeName) + "-message"
+
+		if field.isList {
+			typeName += "[]"
+		}
+
+		return fmt.Sprintf(
+			"[`%s`](%s)",
+			typeName,
+			typeLink,
+		)
+
+	default:
+		typeName = field.fieldType
+		if field.isList {
+			typeName += "[]"
+		}
+
+		if strings.Contains(typeName, "`") {
+			return typeName
+		}
+
+		return fmt.Sprintf("`%s`", typeName)
+	}
 }
 
 type messageField struct {
@@ -124,16 +147,4 @@ type messageField struct {
 	required     bool
 	description  string
 	options      *validate.FieldConstraints
-}
-
-type messageTableData struct {
-	colLengths []int
-	rows       []*messageTableFieldRow
-}
-
-type messageTableFieldRow struct {
-	fieldName   string
-	fieldType   string
-	required    bool
-	description string
 }

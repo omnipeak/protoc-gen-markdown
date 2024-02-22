@@ -1,6 +1,11 @@
 version: v1
 managed:
   enabled: true
+  go_package_prefix:
+    default: github.com/omnipeak/protoc-gen-markdown/internal
+    except:
+      - buf.build/googleapis/googleapis
+      - buf.build/bufbuild/protovalidate
 
 plugins:
   - plugin: buf.build/omnipeak/markdown

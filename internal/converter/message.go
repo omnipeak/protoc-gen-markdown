@@ -100,35 +100,7 @@ func (c *converter) writeMessageFieldsTable(f *protogen.GeneratedFile, messageDa
 		return err
 	}
 
-	tpl := "| %s | %s | %s | %s |"
-
-	f.P(fmt.Sprintf(
-		tpl,
-		utils.PadRight("Name", " ", tableData.colLengths[0]),
-		utils.PadRight("Type", " ", tableData.colLengths[1]),
-		utils.PadRight("Required?", " ", tableData.colLengths[2]),
-		utils.PadRight("Description", " ", tableData.colLengths[3]),
-	))
-
-	f.P(fmt.Sprintf(
-		tpl,
-		utils.PadRight("", "-", tableData.colLengths[0]),
-		utils.PadRight("", "-", tableData.colLengths[1]),
-		utils.PadRight("", "-", tableData.colLengths[2]),
-		utils.PadRight("", "-", tableData.colLengths[3]),
-	))
-
-	for _, row := range tableData.rows {
-		f.P(fmt.Sprintf(
-			tpl,
-			utils.PadRight(row.fieldName, " ", tableData.colLengths[0]),
-			utils.PadRight(row.fieldType, " ", tableData.colLengths[1]),
-			utils.PadRight(utils.BoolToTickOrCross(row.required), " ", tableData.colLengths[2]),
-			utils.PadRight(row.description, " ", tableData.colLengths[3]),
-		))
-	}
-
-	return nil
+	return utils.WriteTable(f, tableData)
 }
 
 func (c *converter) writeMessageFieldValidationTable(f *protogen.GeneratedFile, messageData *messageData) error {
@@ -164,7 +136,6 @@ func (c *converter) writeMessageFieldValidationTable(f *protogen.GeneratedFile, 
 		for _, item := range items {
 			f.P("- ", item)
 		}
-
 	}
 
 	return nil
