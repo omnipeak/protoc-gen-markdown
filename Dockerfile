@@ -1,4 +1,4 @@
-# syntax=docker/dockerfile:1.6
+# syntax=docker/dockerfile:1.7
 FROM golang:1.22-bullseye AS builder
 # RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 \
 #   go install -ldflags "-s -w" -trimpath github.com/omnipeak/protoc-gen-markdown@v0.0.1
