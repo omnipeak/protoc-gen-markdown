@@ -1,19 +1,9 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": [
-    "config:recommended"
-  ],
-  "customManagers": [
-    {
-      "customType": "regex",
-      "fileMatch": [
-        "^.pre-commit-config.ya?ml$"
-      ],
-      "matchStrings": [
-        "  rev: [\"']?(?<currentValue>v\\d+(?:\\.\\d+)*)[\"']? # (?<datasource>[\\w-]+) (?<depName>[\\w\\.\\/-]+)"
-      ]
-    }
-  ],
-  "schedule": ["after 1am and before 9am every weekday", "every weekend"],
-  "timezone": "Europe/Berlin"
+    "github>omnipeak/infrastructure//renovate/base",
+    "github>omnipeak/infrastructure//renovate/pre-commit-config",
+    "github>omnipeak/infrastructure//renovate/github-workflows-config",
+    "github>omnipeak/infrastructure//renovate/sonarcloud"
+  ]
 }

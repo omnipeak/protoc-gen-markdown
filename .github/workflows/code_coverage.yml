@@ -1,0 +1,65 @@
+# **Note:** Please ignore `sonarlint(secrets:S6698)` until they add a way to
+# suppress it for specific lines or files without having to disable the rule
+# entirely.
+
+name: Code Coverage
+on:
+  push:
+    branches:
+      - 1.x.x
+  pull_request:
+    types: [opened, synchronize, reopened]
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  coverage:
+    name: Compute code coverage and send it to SonarCloud
+    runs-on: ubuntu-latest
+    container: docker://golang:1.22.0
+
+    steps:
+      - name: Checkout ui-backend
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GH_ACTION_CHECKOUT_TOKEN }}
+
+      - name: Run tests and compute code coverage
+        run: |
+          set -e
+          go clean -testcache
+          GOEXPERIMENT=nocoverageredesign go test -v -coverpkg=./... -coverprofile=.coverage.out ./...
+          go tool cover -func=.coverage.out
+          go tool cover -html=.coverage.out -o .coverage.html
+
+      - name: Upload coverage.html artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage.html
+          path: .coverage.html
+
+      - name: SonarCloud Scan
+        uses: SonarSource/sonarcloud-github-action@v2.1.1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # Needed to get PR information, if any
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
+  merge-renovate-prs:
+    name: Auto-merge Renovate PRs if tests pass
+    needs: [coverage]
+    if: needs.coverage.result == 'success' && startsWith(github.head_ref , 'renovate/')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Merge PR
+        uses: squalrus/merge-bot@v0.4.5
+        with:
+          # Set to true to test the action without merging
+          test: false
+          GITHUB_TOKEN: ${{ secrets.GH_ACTION_MERGE_RENOVATE_TOKEN }}
+          reviewers: false
+          labels: renovate
+          method: squash
+          delete_source_branch: true
